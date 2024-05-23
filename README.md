@@ -37,13 +37,13 @@ Habitica Party Up! is a Go-based application that automates the process of invit
 ### Run the application with command-line flags
 
 ```sh
-go run main.go -api-user your-api-user -api-key your-api-key
+./habitica-party-up -api-user your-api-user -api-key your-api-key
 ```
 
 ### Example
 
 ```sh
-go run main.go -api-user 12345678-90ab-cdef-1234-567890abcdef -api-key 12345678-90ab-cdef-1234-567890abcdef
+./habitica-party-up -api-user 12345678-90ab-cdef-1234-567890abcdef -api-key 12345678-90ab-cdef-1234-567890abcdef
 ```
 
 ## Configuration
@@ -58,7 +58,7 @@ You can configure the application using command-line flags. The following config
 Pass the API user and key as command-line arguments:
 
 ```sh
-go run main.go -api-user your-api-user -api-key your-api-key
+./habitica-party-up -api-user your-api-user -api-key your-api-key
 ```
 
 ## Code Structure
