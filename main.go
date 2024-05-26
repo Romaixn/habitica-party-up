@@ -158,7 +158,7 @@ func inviteUsers(client http.Client, uuids []string) {
 		log.Fatal(readErr)
 	}
 
-	log.Println("All users invited!")
+	log.Println("All users invited! Relaunch in 2 minutes.")
 }
 
 func isValidUser(user User) bool {
