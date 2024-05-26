@@ -20,6 +20,16 @@ type Response struct {
 
 type User struct {
 	Id string `json:"_id"`
+	Preferences Preferences `json:"preferences"`
+	Stats Stats `json:"stats"`
+}
+
+type Preferences struct {
+	Language string `json:"language"`
+}
+
+type Stats struct {
+	Level int `json:"lvl"`
 }
 
 type InviteRequest struct {
@@ -29,9 +39,14 @@ type InviteRequest struct {
 var apiUser string
 var apiKey string
 
+var minLvl int
+var language string
+
 func main() {
 	flag.StringVar(&apiUser, "api-user", "", "Habitica API user")
 	flag.StringVar(&apiKey, "api-key", "", "Habitica API key")
+	flag.IntVar(&minLvl, "min-lvl", 0, "Min level of users to invite to party. Default is 0.")
+	flag.StringVar(&language, "language", "", "Language of users to invite to party. Default is all languages.")
 	flag.Parse()
 
 	if apiUser == "" || apiKey == "" {
@@ -39,6 +54,7 @@ func main() {
 	}
 
 	fmt.Println("Welcome to PartyUp! The script will now start fetching users and inviting them to party.")
+	fetchUsersAndInvite()
 	go executeCronJob()
 	time.Sleep(168 * time.Hour)
 }
@@ -92,13 +108,15 @@ func fetchUsersAndInvite() {
 
 	usersUuid := make([]string, len(response.User))
 	for _, user := range response.User {
-		if user.Id != "" {
+		if isValidUser(user) {
 			usersUuid = append(usersUuid, user.Id)
 		}
 	}
 
 	if len(usersUuid) != 0 {
 		inviteUsers(habiticaClient, usersUuid)
+	} else {
+		log.Println("No users to invite. Retry in 2 minutes.")
 	}
 }
 
@@ -141,6 +159,22 @@ func inviteUsers(client http.Client, uuids []string) {
 	}
 
 	log.Println("All users invited!")
+}
+
+func isValidUser(user User) bool {
+	if user.Id == "" {
+		return false
+	}
+
+	if user.Stats.Level < minLvl {
+		return false
+	}
+
+	if language != "" && user.Preferences.Language != language {
+		return false
+	}
+
+	return true
 }
 
 func removeEmptyStrings(input []string) []string {
