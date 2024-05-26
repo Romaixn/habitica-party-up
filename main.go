@@ -20,8 +20,19 @@ type Response struct {
 
 type User struct {
 	Id string `json:"_id"`
+	Auth Auth `json:"auth"`
 	Preferences Preferences `json:"preferences"`
 	Stats Stats `json:"stats"`
+}
+
+type Auth struct {
+	Timestamps Timestamps `json:"timestamps"`
+}
+
+type Timestamps struct {
+	Created time.Time `json:"created"`
+	LoggedIn time.Time `json:"loggedin"`
+	Updated time.Time `json:"updated"`
 }
 
 type Preferences struct {
@@ -41,12 +52,14 @@ var apiKey string
 
 var minLvl int
 var language string
+var onlyActive bool
 
 func main() {
 	flag.StringVar(&apiUser, "api-user", "", "Habitica API user")
 	flag.StringVar(&apiKey, "api-key", "", "Habitica API key")
 	flag.IntVar(&minLvl, "min-lvl", 0, "Min level of users to invite to party. Default is 0.")
 	flag.StringVar(&language, "language", "", "Language of users to invite to party. Default is all languages.")
+	flag.BoolVar(&onlyActive, "only-active", false, "Only invite active users to party. Default is false.")
 	flag.Parse()
 
 	if apiUser == "" || apiKey == "" {
@@ -103,7 +116,7 @@ func fetchUsersAndInvite() {
 	}
 
 	if !response.Success {
-		log.Fatal("Request failed")
+		log.Fatal("Request failed, please check your API user and key.")
 	}
 
 	usersUuid := make([]string, len(response.User))
@@ -113,6 +126,7 @@ func fetchUsersAndInvite() {
 		}
 	}
 
+	usersUuid = removeEmptyStrings(usersUuid)
 	if len(usersUuid) != 0 {
 		inviteUsers(habiticaClient, usersUuid)
 	} else {
@@ -123,10 +137,8 @@ func fetchUsersAndInvite() {
 func inviteUsers(client http.Client, uuids []string) {
 	inviteUrl := "https://habitica.com/api/v3/groups/party/invite"
 
-	nonEmptyUuids := removeEmptyStrings(uuids)
-
 	inviteRequest := InviteRequest{
-		Uuids: nonEmptyUuids,
+		Uuids: uuids,
 	}
 
 	inviteBody, jsonErr := json.Marshal(inviteRequest)
@@ -158,7 +170,7 @@ func inviteUsers(client http.Client, uuids []string) {
 		log.Fatal(readErr)
 	}
 
-	log.Println("All users invited! Relaunch in 2 minutes.")
+	log.Printf("All %d users invited! Relaunch in 2 minutes.", len(uuids))
 }
 
 func isValidUser(user User) bool {
@@ -172,6 +184,14 @@ func isValidUser(user User) bool {
 
 	if language != "" && user.Preferences.Language != language {
 		return false
+	}
+
+	if onlyActive {
+		oneMonthAgo := time.Now().AddDate(0, -1, 0)
+		recently := time.Now().AddDate(0, 0, -4)
+
+		return user.Auth.Timestamps.Created.Before(oneMonthAgo) &&
+			user.Auth.Timestamps.LoggedIn.After(recently)
 	}
 
 	return true
