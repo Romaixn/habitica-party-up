@@ -2,12 +2,12 @@
 
 ## Overview
 
-Habitica Party Up! is a Go-based application that automates the process of inviting users to a Habitica party. This application fetches users looking for a party every 2 minutes and sends them an invitation automatically.
+Habitica Party Up! is a Go-based application that automates the process of inviting users to a Habitica party. This application fetches users looking for a party based on an interval and sends them an invitation automatically.
 
 ## Features
 
 - Fetches users looking for a Habitica party.
-- Invites users to a Habitica party every 2 minutes.
+- Invites users to a Habitica party on an interval.
 - Configurable API user and API key via environment variables or command-line flags.
 
 ## Prerequisites
@@ -53,6 +53,7 @@ You can configure the application using command-line flags. The following config
 - `api-user`: Your Habitica API user ID.
 - `api-key`: Your Habitica API key.
 - `min-lvl`: Min level of users to invite to party. Default to 0 (invite everybody).
+- `fetch-interval`: Interval for fetching users in seconds. Default is 120 (2 minutes).
 - `language`: Language of users to invite to party. Default is all languages (can be something like "fr" / "en" / "zh", etc.).
 - `only-active`: Only invite active users to party, based on an algorithm. Default is false.
 
