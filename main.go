@@ -51,6 +51,7 @@ var apiUser string
 var apiKey string
 
 var minLvl int
+var fetchInterval uint64
 var language string
 var onlyActive bool
 
@@ -58,6 +59,7 @@ func main() {
 	flag.StringVar(&apiUser, "api-user", "", "Habitica API user")
 	flag.StringVar(&apiKey, "api-key", "", "Habitica API key")
 	flag.IntVar(&minLvl, "min-lvl", 0, "Min level of users to invite to party. Default is 0.")
+    flag.Uint64Var(&fetchInterval, "fetch-interval", 120, "Interval for fetching users in seconds. Default is 120.")
 	flag.StringVar(&language, "language", "", "Language of users to invite to party. Default is all languages.")
 	flag.BoolVar(&onlyActive, "only-active", false, "Only invite active users to party. Default is false.")
 	flag.Parse()
@@ -73,7 +75,7 @@ func main() {
 }
 
 func executeCronJob() {
-	gocron.Every(2).Minute().Do(fetchUsersAndInvite)
+	gocron.Every(fetchInterval).Second().Do(fetchUsersAndInvite)
 	<-gocron.Start()
 }
 
@@ -130,7 +132,7 @@ func fetchUsersAndInvite() {
 	if len(usersUuid) != 0 {
 		inviteUsers(habiticaClient, usersUuid)
 	} else {
-		log.Println("No users to invite. Retry in 2 minutes.")
+		log.Printf("No users to invite. Retry in %d seconds.", fetchInterval)
 	}
 }
 
@@ -170,7 +172,7 @@ func inviteUsers(client http.Client, uuids []string) {
 		log.Fatal(readErr)
 	}
 
-	log.Printf("All %d users invited! Relaunch in 2 minutes.", len(uuids))
+	log.Printf("All %d users invited! Relaunch in %d seconds.", len(uuids), fetchInterval)
 }
 
 func isValidUser(user User) bool {
